@@ -9,6 +9,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Base64;
+import java.util.Base64.Decoder;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +24,7 @@ import static tech.allegro.schema.json2avro.converter.AvroTypeExceptions.*;
 public class JsonGenericRecordReader {
     private static final Object INCOMPATIBLE = new Object();
     private final ObjectMapper mapper;
+    private final Decoder base64Decoder = Base64.getDecoder();
 
     public JsonGenericRecordReader() {
         this(new ObjectMapper());
@@ -77,6 +80,7 @@ public class JsonGenericRecordReader {
             case BOOLEAN: result = onValidType(value, Boolean.class, path, silently, bool -> bool); break;
             case ENUM:    result = onValidType(value, String.class, path, silently, string -> ensureEnum(schema, string, path)); break;
             case STRING:  result = onValidType(value, String.class, path, silently, string -> string); break;
+            case BYTES:   result = onValidType(value, String.class, path, silently, string -> base64Decoder.decode(string)); break;
             case NULL:    result = value == null ? value : INCOMPATIBLE; break;
             default: throw new AvroTypeException("Unsupported type: " + field.schema().getType());
         }
